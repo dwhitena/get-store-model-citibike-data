@@ -46,13 +46,31 @@ with con:
 print "The most active station is station id %s at %s latitude: %s longitude: %s " % data
 print "With " + str(total_change[max_station]) + " bicycles coming and going in the hour between " + datetime.datetime.fromtimestamp(int(df.index[0])).strftime('%Y-%m-%dT%H:%M:%S') + " and " + datetime.datetime.fromtimestamp(int(df.index[-1])).strftime('%Y-%m-%dT%H:%M:%S')
 
+print data
 
 # -----------------------------
 # PLOTTING
 # -----------------------------
-plt.bar(range(len(df.columns)), total_change.values())
-plt.xlabel('stations')
-plt.ylabel('activity')
+# scatter plot of all stations
+dfcoord = pd.read_sql_query("SELECT longitude, latitude FROM citibike_reference", \
+	con)
+lon = dfcoord['longitude'].tolist()
+lat = dfcoord['latitude'].tolist()
+areas = [x**1.5 for x in total_change.values()]
+plt.figure(figsize=(10,10))
+plt.scatter(lon, lat, s=areas, alpha=0.5)
+plt.scatter(data[3], data[2], s=total_change[max_station]**1.5, alpha=1, c='r')
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.title('Citibike activity from ' + datetime.datetime.fromtimestamp(int(df.index[0])).strftime('%Y-%m-%dT%H:%M:%S') \
+	+ " to " + datetime.datetime.fromtimestamp(int(df.index[-1])).strftime('%Y-%m-%dT%H:%M:%S'))
 plt.draw()
-plt.savefig('bike_change.png')
-plt.show()
+plt.savefig('long_lat_scatter.png')
+
+# bar chart to verify the max value
+#plt.bar(range(len(df.columns)), total_change.values())
+#plt.xlabel('stations')
+#plt.ylabel('activity')
+#plt.draw()
+#plt.savefig('bike_change.png')
+#plt.show()
