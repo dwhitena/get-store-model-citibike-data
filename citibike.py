@@ -36,26 +36,30 @@ with con:
 with con:
 
 	# create table for the citibike data
-    cur.execute('CREATE TABLE citibike_reference (id INT PRIMARY KEY, \
-    	totalDocks INT, city TEXT, altitude INT, stAddress2 TEXT, \
-    	longitude NUMERIC, postalCode TEXT, testStation TEXT, \
-    	stAddress1 TEXT, stationName TEXT, landMark TEXT, latitude NUMERIC, \
-    	location TEXT )')
+	sql = ("CREATE TABLE citibike_reference (id INT PRIMARY KEY, " 
+    	"totalDocks INT, city TEXT, altitude INT, stAddress2 TEXT, "
+    	"longitude NUMERIC, postalCode TEXT, testStation TEXT, "
+    	"stAddress1 TEXT, stationName TEXT, landMark TEXT, latitude NUMERIC, "
+    	"location TEXT )")
+    cur.execute(sql)
 
-    sql = "INSERT INTO citibike_reference (id, totalDocks, \
-    	city, altitude, stAddress2, longitude, postalCode, \
-    	testStation, stAddress1, stationName, landMark, \
-    	latitude, location) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"
+    sql = ("INSERT INTO citibike_reference (id, totalDocks, "
+    	"city, altitude, stAddress2, longitude, postalCode, "
+    	"testStation, stAddress1, stationName, landMark, "
+    	"latitude, location) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")
 
     # fill table with data in dataframe
     for station in r.json()['stationBeanList']:
         #id, totalDocks, city, altitude, stAddress2, longitude, postalCode, testStation, stAddress1, stationName, landMark, latitude, location)
-        cur.execute(sql,(station['id'],station['totalDocks'],\
-        	station['city'],station['altitude'],station['stAddress2'],\
-        	station['longitude'],station['postalCode'],\
-        	station['testStation'],station['stAddress1'],\
-        	station['stationName'],station['landMark'],\
-        	station['latitude'],station['location']))
+        fill = (
+        	station['id'],station['totalDocks'],
+        	station['city'],station['altitude'],station['stAddress2'],
+        	station['longitude'],station['postalCode'],
+        	station['testStation'],station['stAddress1'],
+        	station['stationName'],station['landMark'],
+        	station['latitude'],station['location']
+        	)
+        cur.execute(sql, fill)
 
 # extract the station ids from the DataFrame 
 station_ids = df['id'].tolist() 
@@ -67,8 +71,9 @@ station_ids = ['_' + str(x) + ' INT' for x in station_ids]
 # in this case, we're concatentating the string and joining all 
 # the station ids (now with '_' and 'INT' added)
 with con:
-    cur.execute("CREATE TABLE available_bikes \
-    	( execution_time INT, " +  ", ".join(station_ids) + ");")
+	sql = ("CREATE TABLE available_bikes "
+		   "(execution_time INT, " +  ", ".join(station_ids) + ");")
+    cur.execute(sql)
 
 
 # ------------------
@@ -83,8 +88,8 @@ for i in range(60):
 
 	# create entry for the execution time
 	with con:
-		cur.execute('INSERT INTO available_bikes (execution_time) VALUES (?)', \
-			(exec_time.strftime('%s'),))
+		sql = 'INSERT INTO available_bikes (execution_time) VALUES (?)'
+		cur.execute(sql, (exec_time.strftime('%s'),))
 
 	#defaultdict to store available bikes by station
 	id_bikes = collections.defaultdict(int) 
@@ -96,9 +101,10 @@ for i in range(60):
 	#iterate through the defaultdict to update the values in the database
 	with con:
 		for k, v in id_bikes.iteritems():
-			cur.execute("UPDATE available_bikes SET _" + str(k) + \
-				" = " + str(v) + " WHERE execution_time = " + \
-				exec_time.strftime('%s') + ";")
+			sql = ("UPDATE available_bikes SET _" + str(k) + 
+				   " = " + str(v) + " WHERE execution_time = " + 
+				   exec_time.strftime('%s') + ";")
+			cur.execute(sql)
 
 	# wait sixty seconds
 	time.sleep(60)
