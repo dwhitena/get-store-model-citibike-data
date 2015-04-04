@@ -10,8 +10,9 @@ con = lite.connect('citi_bike.db')
 cur = con.cursor()
 
 # put retrieved data in a dataframe
-df = pd.read_sql_query("SELECT * FROM available_bikes \
-	ORDER BY execution_time",con,index_col='execution_time')
+query = ("SELECT * FROM available_bikes "
+	     "ORDER BY execution_time")
+df = pd.read_sql_query(query, con, index_col='execution_time')
 
 
 # -----------------------------
@@ -37,10 +38,11 @@ for column in df.columns:
 max_station = max(total_change, key=total_change.get)
 
 # print info
-#query sqlite for reference information
+# query sqlite for reference information
 with con:
-	cur.execute("SELECT id, stationname, latitude, longitude \
-		FROM citibike_reference WHERE id = " + max_station.lstrip('_'))
+	query = ("SELECT id, stationname, latitude, longitude "
+		     "FROM citibike_reference WHERE id = ")
+	cur.execute(query + max_station.lstrip('_'))
 	data = cur.fetchone()
 
 print "The most active station is station id %s at %s latitude: %s longitude: %s " % data
